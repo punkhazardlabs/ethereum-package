@@ -21,6 +21,7 @@ blobscan = import_module("./src/blobscan/blobscan_launcher.star")
 forky = import_module("./src/forky/forky_launcher.star")
 tracoor = import_module("./src/tracoor/tracoor_launcher.star")
 apache = import_module("./src/apache/apache_launcher.star")
+nginx = import_module("./src/nginx/nginx_launcher.star")
 full_beaconchain_explorer = import_module(
     "./src/full_beaconchain/full_beaconchain_launcher.star"
 )
@@ -56,6 +57,7 @@ get_prefunded_accounts = import_module(
     "./src/prefunded_accounts/get_prefunded_accounts.star"
 )
 spamoor = import_module("./src/spamoor/spamoor.star")
+txpool_viz = import_module("./src/txpool_viz/txpool_viz.star")
 
 GRAFANA_USER = "admin"
 GRAFANA_PASSWORD = "admin"
@@ -87,6 +89,7 @@ def run(plan, args={}):
     global_node_selectors = args_with_right_defaults.global_node_selectors
     keymanager_enabled = args_with_right_defaults.keymanager_enabled
     apache_port = args_with_right_defaults.apache_port
+    nginx_port = args_with_right_defaults.nginx_port
     docker_cache_params = args_with_right_defaults.docker_cache_params
 
     prefunded_accounts = genesis_constants.PRE_FUNDED_ACCOUNTS
@@ -475,6 +478,18 @@ def run(plan, args={}):
                 global_node_selectors,
             )
             plan.print("Successfully launched tx-fuzz")
+        elif additional_service == "txpool_viz":
+            plan.print("Launching txpool-viz")
+            txpool_viz_config_template = read_file(
+                static_files.TXPOOL_VIZ_CONFIG_TEMPLATE_FILEPATH
+            )
+            txpool_viz.launch_txpool_viz(
+                plan,
+                txpool_viz_config_template,
+                all_participants,
+                args_with_right_defaults.txpool_viz_params,
+                global_node_selectors
+            )
         elif additional_service == "forkmon":
             plan.print("Launching el forkmon")
             forkmon_config_template = read_file(
@@ -624,6 +639,20 @@ def run(plan, args={}):
                 args_with_right_defaults.docker_cache_params,
             )
             plan.print("Successfully launched apache")
+        elif additional_service == "nginx":
+            plan.print("Launching nginx")
+            nginx.launch_nginx(
+                plan,
+                el_cl_data_files_artifact_uuid,
+                nginx_port,
+                all_participants,
+                args_with_right_defaults.participants,
+                args_with_right_defaults.port_publisher,
+                index,
+                global_node_selectors,
+                args_with_right_defaults.docker_cache_params,
+            )
+            plan.print("Successfully launched nginx")
         elif additional_service == "full_beaconchain_explorer":
             plan.print("Launching full-beaconchain-explorer")
             full_beaconchain_explorer_config_template = read_file(
